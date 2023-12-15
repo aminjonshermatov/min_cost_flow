@@ -35,7 +35,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         run: |
-          CXX_FLAGS="-Wall -O3 --std=c++20"
+          CXX_FLAGS="-Wall -O3 -std=c++20"
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
           cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
