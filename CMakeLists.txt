@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 
-set(CMAKE_C_COMPILER "gcc-13")
-set(CMAKE_CXX_COMPILER "/usr/bin/c++")
+set(CMAKE_C_COMPILER "/usr/bin/gcc-13")
+set(CMAKE_CXX_COMPILER "/usr/bin/g++-13")
 
 add_subdirectory(include)
 
