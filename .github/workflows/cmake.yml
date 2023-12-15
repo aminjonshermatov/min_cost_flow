@@ -38,7 +38,7 @@ jobs:
           CXX_FLAGS="--std=c++2a -Wall -Werror -Wno-variadic-macros -Wno-long-long -Wno-shadow"
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
-          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS}
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
 
       - name: Compile the project
         working-directory: ${{github.workspace}}
