@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
+include(GoogleTest)
 add_executable(tests test_min_cost_flow.cpp)
 
 target_include_directories(tests
@@ -9,3 +10,5 @@ target_include_directories(tests
 target_link_libraries(tests
         gtest
         ${PROJECT_NAME})
+
+gtest_discover_tests(tests)
