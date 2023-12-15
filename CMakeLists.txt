@@ -12,6 +12,7 @@ add_subdirectory(include)
 
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
+include(CTest)
 enable_testing()
 add_subdirectory(tests)
 add_subdirectory(third_party/googletest)
