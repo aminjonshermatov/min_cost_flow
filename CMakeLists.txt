@@ -19,3 +19,4 @@ add_subdirectory(third_party/googletest)
 
 
 add_subdirectory(benchmarks)
+add_subdirectory(third_party/benchmark)
