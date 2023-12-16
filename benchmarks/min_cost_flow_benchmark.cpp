@@ -1,6 +1,7 @@
-#include "util/network_generator.hpp"
 #include <benchmark/benchmark.h>
 #include <min_cost_flow/min_cost_flow.hpp>
+
+#include "util/network_generator.hpp"
 
 std::vector<int64_t> numberOfVertices{100, 250, 500, 750, 1000, 2000}, percentageOfDense{30, 40, 50, 60, 70, 80};
 
