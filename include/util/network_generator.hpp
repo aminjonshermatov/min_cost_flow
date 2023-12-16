@@ -4,6 +4,8 @@
 #include <concepts>
 #include <functional>
 #include <ranges>
+#include <cassert>
+#include <queue>
 
 #include "random.hpp"
 #include "range_to_container.hpp"
@@ -32,9 +34,9 @@ namespace NUtil::NNetwork {
     };
 
     auto isConnected = [&indexDAG](const std::size_t n, const std::vector<bool> &dag, const std::size_t source) -> decltype(auto) {
-      std::vector<int8_t> isReached(n, false);
+      std::vector<bool> isReached(n, false);
       std::queue<std::size_t> queue;
-      isReached[source] = 1;
+      isReached[source] = true;
       queue.emplace(source);
       while (!queue.empty()) {
         const auto x = queue.front();

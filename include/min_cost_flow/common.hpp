@@ -4,7 +4,7 @@
 
 namespace NMinCostFlow {
 
-  template<typename TUnit>
+  template<std::integral TUnit>
   struct TFlowEdge {
     std::size_t from, to;
     TUnit capacity, flow, cost;

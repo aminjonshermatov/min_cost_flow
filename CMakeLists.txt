@@ -17,5 +17,5 @@ enable_testing()
 add_subdirectory(tests)
 add_subdirectory(third_party/googletest)
 
-# add_subdirectory(benchmarks)
-# add_subdirectory(third-party/benchmark)
+
+add_subdirectory(benchmarks)

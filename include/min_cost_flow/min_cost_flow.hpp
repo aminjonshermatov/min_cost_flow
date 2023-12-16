@@ -13,7 +13,7 @@ namespace NMinCostFlow {
     kEdmondsKarp
   };
 
-  template<typename T, FindPathType findPathType>
+  template<std::integral T, FindPathType findPathType>
   class TMinCostFlow {
 
     std::size_t n;
