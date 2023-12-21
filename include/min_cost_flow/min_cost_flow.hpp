@@ -39,32 +39,37 @@ namespace NMinCostFlow {
 
     auto flow(const std::size_t source, const std::size_t sink) -> decltype(auto) {
       std::fill(pot.begin(), pot.end(), 0);
-      bool any = true;
-      for (int _ = 0; _ < n && any; ++_) {
-        any = false;
-        for (const auto &edge: edges) {
-          if (edge.capacity == 0) continue;
-          auto npot = pot[edge.from] + edge.cost;
-          if (pot[edge.to] > npot) {
-            any |= true;
-            pot[edge.to] = npot;
+      if constexpr (findPathType == FindPathType::kDijkstra) {
+        bool any = true;
+        for (int _ = 0; _ < n && any; ++_) {
+          any = false;
+          for (const auto &edge: edges) {
+            if (edge.capacity == 0) continue;
+            auto npot = pot[edge.from] + edge.cost;
+            if (pot[edge.to] > npot) {
+              any |= true;
+              pot[edge.to] = npot;
+            }
           }
         }
+        assert(!any);// cycle of negative weight
       }
-      assert(!any);// cycle of negative weight
 
       T flow{}, cost{};
       while ((this->*getFindPathAlgorithm())(source, sink)) {
-        for (int v = 0; v < n; ++v) {
-          pot[v] += dist[v];
+        if constexpr (findPathType == FindPathType::kDijkstra) {
+          for (int v = 0; v < n; ++v) {
+            pot[v] += dist[v];
+          }
         }
+
         auto nf = std::numeric_limits<T>::max();
-        for (int v = sink; v != source; v = edges[pre[v]].from) {
+        for (auto v = sink; v != source; v = edges[pre[v]].from) {
           nf = std::min(nf, edges[pre[v]].capacity - edges[pre[v]].flow);
         }
         flow += nf;
         cost += (pot[sink] - pot[source]) * nf;
-        for (int v = sink; v != source; v = edges[pre[v]].from) {
+        for (auto v = sink; v != source; v = edges[pre[v]].from) {
           edges[pre[v]].flow += nf;
           edges[pre[v] ^ 1].flow -= nf;
         }
