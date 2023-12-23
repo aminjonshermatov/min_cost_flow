@@ -57,10 +57,8 @@ namespace NMinCostFlow {
 
       T flow{}, cost{};
       while ((this->*getFindPathAlgorithm())(source, sink)) {
-        if constexpr (findPathType == FindPathType::kDijkstra) {
-          for (int v = 0; v < n; ++v) {
-            pot[v] += dist[v];
-          }
+        for (int v = 0; v < n; ++v) {
+          pot[v] += dist[v];
         }
 
         auto nf = std::numeric_limits<T>::max();

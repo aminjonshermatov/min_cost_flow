@@ -6,10 +6,6 @@ import matplotlib.pyplot as plt
 
 
 def plot(data):
-    fig = plt.figure(figsize=(16, 6))
-    ax1 = fig.add_subplot(121, projection='3d')
-    ax2 = fig.add_subplot(122, projection='3d')
-
     x = data['minCostFlowDijkstra'][1]
     y = data['minCostFlowDijkstra'][2]
 
@@ -19,6 +15,17 @@ def plot(data):
     width = 150
     depth = 3
 
+    foo = {}
+    for i in range(len(dijkstra)):
+        if y[i] not in foo:
+            foo[y[i]] = ([], [], [])
+        foo[y[i]][0].append(x[i])
+        foo[y[i]][1].append(dijkstra[i])
+        foo[y[i]][2].append(edmonds_karp[i])
+
+    fig = plt.figure(figsize=(16, 6))
+    ax1 = fig.add_subplot(121, projection='3d')
+    ax2 = fig.add_subplot(122, projection='3d')
     ax1.bar3d(x, y, bottom, width, depth, dijkstra, shade=True)
     ax1.set_title('Dijkstra')
 
@@ -31,6 +38,17 @@ def plot(data):
         ax.set_zlabel("CPU time")
 
     plt.show()
+    for bar in foo:
+        dijk = foo[bar][1]
+        edmo = foo[bar][2]
+        xs = foo[bar][0]
+        df = pd.DataFrame({'Dijkstra': dijk,
+                           'Edmonds-Karp': edmo}, index=xs)
+        df.plot.bar()
+        plt.xlabel('Vertices')
+        plt.ylabel('Time, ms')
+        plt.title(f'Dense: {bar}%')
+        plt.show()
 
 
 def parse_csv(csv_file):
