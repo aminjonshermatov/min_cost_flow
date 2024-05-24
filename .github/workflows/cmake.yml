@@ -17,7 +17,7 @@ jobs:
       PROJECT: gtest_submodule
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -26,8 +26,7 @@ jobs:
         # Note the current convention is to use the -S and -B options here to specify source
         # and build directories, but this is only available with CMake 3.13 and higher.
         run: |
-          sudo apt-get install -y gcc-13 g++-13 clang-14 valgrind python3-yaml cmake lcov
-          sudo pip install codecov
+          sudo apt-get install -y gcc-13 g++-13 cmake
 
       - name: Create CMake build files
         working-directory: ${{github.workspace}}
@@ -37,8 +36,9 @@ jobs:
         run: |
           CXX_FLAGS=""
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
+          export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
-          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13
 
       - name: Compile the project
         working-directory: ${{github.workspace}}

@@ -1,57 +1,66 @@
 #include <benchmark/benchmark.h>
 #include <min_cost_flow/min_cost_flow.hpp>
+#include <util/network_generator.hpp>
 
-#include "util/network_generator.hpp"
+std::vector<int64_t> numberOfVertices{100, 250, 500, 750, 1000, 2000},
+    percentageOfDense{30, 40, 50, 60, 70, 80};
 
-std::vector<int64_t> numberOfVertices{100, 250, 500, 750, 1000, 2000}, percentageOfDense{30, 40, 50, 60, 70, 80};
+std::map<std::pair<int64_t, int64_t>,
+         std::vector<NUtil::NNetwork::TEdge<int64_t, int64_t>>>
+    cache{};
 
-std::map<std::pair<int64_t, int64_t>, std::vector<NUtil::NNetwork::TEdge<int64_t>>> cache{};
-auto getNetwork(int64_t nVertices, int64_t percentage) -> decltype(auto) {
-    const auto key = std::pair(nVertices, percentage);
-    if (!cache.contains(key)) {
-      cache.emplace(key, NUtil::NNetwork::generateWeightedWithCost<int64_t>(nVertices, percentage, 1000, 1000));
-    }
-    return cache.at(key);
-};
+auto GetNetwork(uint32_t nVertices, uint32_t percentage) -> decltype(auto) {
+  const auto key = std::pair(nVertices, percentage);
+  if (!cache.contains(key)) {
+    cache.emplace(key,
+                  NUtil::NNetwork::GenerateWeightedWithCost<int64_t, int64_t>(
+                      nVertices, percentage, int64_t{1000}, int64_t{1000}));
+  }
+  return cache.at(key);
+}
 
-static void minCostFlowDijkstra(benchmark::State& state) {
-  for (auto _ : state) {
-    const auto n = state.range(0);
-    NMinCostFlow::TMinCostFlow<int64_t, NMinCostFlow::FindPathType::kDijkstra> minCostFlow(n);
-    const std::size_t source = 0, sink = n - 1;
+static void MinCostFlowDijkstra(benchmark::State &state) {
+  for ([[maybe_unused]] auto _ : state) {
+    const auto nVertices = state.range(0);
+    NMCF::TMinCostFlow<int64_t, int64_t, NMCF::FindPathType::kDijkstra>
+        minCostFlow(nVertices);
+    const uint32_t source{}, sink = nVertices - 1;
     state.PauseTiming();
-    for (const auto& [from, to, capacity, cost] : getNetwork(n, state.range(1))) {
-      minCostFlow.addEdge(from, to, capacity, cost);
+    for (const auto &[from, to, capacity, cost] :
+         GetNetwork(nVertices, state.range(1))) {
+      minCostFlow.AddEdge(from, to, capacity, cost);
     }
     state.ResumeTiming();
-    benchmark::DoNotOptimize(minCostFlow.flow(source, sink));
+    benchmark::DoNotOptimize(minCostFlow.Flow(source, sink));
   }
 }
 
-static void minCostFlowEdmondsKarp(benchmark::State& state) {
-  for (auto _ : state) {
-    const auto n = state.range(0);
-    NMinCostFlow::TMinCostFlow<int64_t, NMinCostFlow::FindPathType::kEdmondsKarp> minCostFlow(n);
-    const std::size_t source = 0, sink = n - 1;
+static void MinCostFlowEdmondsKarp(benchmark::State &state) {
+  for ([[maybe_unused]] auto _ : state) {
+    const auto nVertices = state.range(0);
+    NMCF::TMinCostFlow<int64_t, int64_t, NMCF::FindPathType::kEdmondsKarp>
+        minCostFlow(nVertices);
+    const uint32_t source{}, sink = nVertices - 1;
     state.PauseTiming();
-    for (const auto& [from, to, capacity, cost] : getNetwork(n, state.range(1))) {
-      minCostFlow.addEdge(from, to, capacity, cost);
+    for (const auto &[from, to, capacity, cost] :
+         GetNetwork(nVertices, state.range(1))) {
+      minCostFlow.AddEdge(from, to, capacity, cost);
     }
     state.ResumeTiming();
-    benchmark::DoNotOptimize(minCostFlow.flow(source, sink));
+    benchmark::DoNotOptimize(minCostFlow.Flow(source, sink));
   }
 }
 
-constexpr std::size_t Iterations = 15u;
+constexpr uint32_t kIterations = 5u;
 
-BENCHMARK(minCostFlowDijkstra)
+BENCHMARK(MinCostFlowDijkstra)
     ->ArgsProduct(std::vector{numberOfVertices, percentageOfDense})
     ->Unit(benchmark::kMillisecond)
-    ->Iterations(Iterations);
+    ->Iterations(kIterations);
 
-BENCHMARK(minCostFlowEdmondsKarp)
+BENCHMARK(MinCostFlowEdmondsKarp)
     ->ArgsProduct(std::vector{numberOfVertices, percentageOfDense})
     ->Unit(benchmark::kMillisecond)
-    ->Iterations(Iterations);
+    ->Iterations(kIterations);
 
 BENCHMARK_MAIN();
