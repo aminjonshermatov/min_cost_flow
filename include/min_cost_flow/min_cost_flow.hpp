@@ -1,138 +1,176 @@
 #pragma once
 
-#include "common.hpp"
-
 #include <cassert>
+#include <concepts>
 #include <cstdint>
 #include <queue>
+#include <ranges>
 
-namespace NMinCostFlow {
+#include "verify.hpp"
 
-  enum class FindPathType : uint8_t {
-    kDijkstra,
-    kEdmondsKarp
-  };
+namespace NMCF {
 
-  template<std::integral T, FindPathType findPathType>
-  class TMinCostFlow {
+enum class FindPathType : uint8_t { kDijkstra, kEdmondsKarp };
 
-    std::size_t n;
-    std::vector<std::vector<std::size_t>> g;
-    std::vector<NMinCostFlow::TFlowEdge<T>> edges;
-    std::vector<T> pot, dist;
-    std::vector<int32_t> pre;
+template <std::integral TFlow, std::integral TCost>
+struct TFlowEdge {
+  uint32_t from, to;
+  TFlow capacity, flow;
+  TCost cost;
+  uint32_t id;
+
+  TFlowEdge(uint32_t from, uint32_t to, TFlow capacity, TCost cost, uint32_t id)
+      : from(from), to(to), capacity(capacity), flow{}, cost(cost), id(id) {}
+};
+
+template <std::integral TFlow, std::integral TCost, FindPathType kFindPathType>
+class TMinCostFlow {
+  uint32_t nVertices_;
+  std::vector<std::vector<uint32_t>> adjacentList_;
+  std::vector<TFlowEdge<TFlow, TCost>> edges_;
+  std::vector<TCost> potential_, distance_;
+  std::vector<int32_t> predecessor_;
 
   public:
-    explicit TMinCostFlow(std::size_t n_) : n(n_) {
-      g.resize(n);
-      pot.resize(n);
-      dist.resize(n);
-      pre.resize(n);
-    }
+  static constexpr uint32_t kNpos = static_cast<uint32_t>(-1);
+  static constexpr TFlow kInfinityFlow = std::numeric_limits<TFlow>::max();
+  static constexpr TCost kInfinityCost = std::numeric_limits<TCost>::max();
 
-    auto addEdge(std::size_t from, std::size_t to, T capacity, T cost, int32_t id = -1) -> void {
-      g[from].emplace_back(edges.size());
-      edges.emplace_back(from, to, capacity, cost, id);
-      g[to].emplace_back(edges.size());
-      edges.emplace_back(to, from, 0, -cost, -1);
-    }
+  explicit TMinCostFlow(uint32_t nVertices) : nVertices_(nVertices) {
+    adjacentList_.resize(nVertices);
+    potential_.resize(nVertices);
+    distance_.resize(nVertices);
+    predecessor_.resize(nVertices);
+  }
 
-    auto flow(const std::size_t source, const std::size_t sink) -> decltype(auto) {
-      std::fill(pot.begin(), pot.end(), 0);
-      if constexpr (findPathType == FindPathType::kDijkstra) {
-        bool any = true;
-        for (int _ = 0; _ < n && any; ++_) {
-          any = false;
-          for (const auto &edge: edges) {
-            if (edge.capacity == 0) continue;
-            auto npot = pot[edge.from] + edge.cost;
-            if (pot[edge.to] > npot) {
-              any |= true;
-              pot[edge.to] = npot;
-            }
+  auto AddEdge(uint32_t from, uint32_t to, TFlow capacity, TCost cost,
+               int32_t id = kNpos) -> void {
+    adjacentList_[from].emplace_back(edges_.size());
+    edges_.emplace_back(from, to, capacity, cost, id);
+    adjacentList_[to].emplace_back(edges_.size());
+    edges_.emplace_back(to, from, TCost{}, -cost, kNpos);
+  }
+
+  auto Flow(uint32_t source, uint32_t sink) -> decltype(auto) {
+    std::ranges::fill(potential_, TCost{});
+    if constexpr (kFindPathType == FindPathType::kDijkstra) {
+      // Bellman-Ford
+      bool isUpdated = true;
+      for ([[maybe_unused]] std::weakly_incrementable auto iteration :
+           std::views::iota(uint32_t{}, nVertices_)) {
+        isUpdated = false;
+        for (const auto &edge : edges_) {
+          if (edge.capacity == TFlow{}) {
+            continue;
+          }
+          if (const auto newPotential = potential_[edge.from] + edge.cost;
+              potential_[edge.to] > newPotential) {
+            isUpdated |= true;
+            potential_[edge.to] = newPotential;
           }
         }
-        assert(!any);// cycle of negative weight
       }
-
-      T flow{}, cost{};
-      while ((this->*getFindPathAlgorithm())(source, sink)) {
-        for (int v = 0; v < n; ++v) {
-          pot[v] += dist[v];
-        }
-
-        auto nf = std::numeric_limits<T>::max();
-        for (auto v = sink; v != source; v = edges[pre[v]].from) {
-          nf = std::min(nf, edges[pre[v]].capacity - edges[pre[v]].flow);
-        }
-        flow += nf;
-        cost += (pot[sink] - pot[source]) * nf;
-        for (auto v = sink; v != source; v = edges[pre[v]].from) {
-          edges[pre[v]].flow += nf;
-          edges[pre[v] ^ 1].flow -= nf;
-        }
-      }
-      return std::tuple(flow, cost);
+      MCF_VERIFY_MSG(!isUpdated, "Detected cycle with negative weight");
     }
+
+    TFlow flow{};
+    TCost cost{};
+    while ((this->*GetFindPathAlgorithm())(source, sink)) {
+      for (std::weakly_incrementable auto &&id :
+           std::views::iota(uint32_t{}, nVertices_)) {
+        potential_[id] += distance_[id];
+      }
+
+      std::integral auto newFlow = kInfinityFlow;
+      for (auto vertex = sink; vertex != source;
+           vertex = edges_[predecessor_[vertex]].from) {
+        newFlow = std::min(newFlow, edges_[predecessor_[vertex]].capacity -
+                                        edges_[predecessor_[vertex]].flow);
+      }
+      flow += newFlow;
+      cost += (potential_[sink] - potential_[source]) * newFlow;
+      for (auto v = sink; v != source; v = edges_[predecessor_[v]].from) {
+        edges_[predecessor_[v]].flow += newFlow;
+        edges_[predecessor_[v] ^ 1].flow -= newFlow;
+      }
+    }
+    return std::tuple(flow, cost);
+  }
 
   private:
-    auto dijkstra(const std::size_t source, const std::size_t sink) -> bool {
-      dist.assign(n, std::numeric_limits<T>::max());
-      pre.assign(n, -1);
+  auto Dijkstra(const uint32_t source, const uint32_t sink) -> bool {
+    distance_.assign(nVertices_, kInfinityCost);
+    predecessor_.assign(nVertices_, kNpos);
 
-      std::priority_queue<std::pair<T, std::size_t>, std::vector<std::pair<T, std::size_t>>, std::greater<>> pq;
-      pq.emplace(dist[source] = 0, source);
-      while (!pq.empty()) {
-        auto [d, from] = pq.top();
-        pq.pop();
-        if (d > dist[from]) continue;
-        for (auto id: g[from]) {
-          auto to = edges[id].to;
-          if (edges[id].capacity - edges[id].flow <= T{}) continue;
-          auto nd = d + edges[id].cost + pot[from] - pot[to];
-          if (nd < dist[to]) {
-            dist[to] = nd;
-            pre[to] = id;
-            pq.emplace(dist[to] = nd, to);
+    std::priority_queue<std::pair<TCost, uint32_t>,
+                        std::vector<std::pair<TCost, uint32_t>>, std::greater<>>
+        pq;
+    pq.emplace(distance_[source] = TCost{}, source);
+    while (!pq.empty()) {
+      auto [distance, fromVertex] = pq.top();
+      pq.pop();
+
+      if (distance > distance_[fromVertex]) {
+        continue;
+      }
+      for (const auto &edgeId : adjacentList_[fromVertex]) {
+        const auto toVertex = edges_[edgeId].to;
+        if (edges_[edgeId].capacity - edges_[edgeId].flow <= TFlow{}) {
+          continue;
+        }
+        auto newDistance = distance + edges_[edgeId].cost +
+                           potential_[fromVertex] - potential_[toVertex];
+        if (newDistance < distance_[toVertex]) {
+          distance_[toVertex] = newDistance;
+          predecessor_[toVertex] = edgeId;
+          pq.emplace(distance_[toVertex] = newDistance, toVertex);
+        }
+      }
+    }
+    return distance_[sink] != kInfinityCost;
+  }
+
+  auto EdmondsKarp(const uint32_t source, const uint32_t sink) -> bool {
+    distance_.assign(nVertices_, kInfinityCost);
+    predecessor_.assign(nVertices_, kNpos);
+
+    std::queue<uint32_t> q;
+    std::vector<bool> inQueue(nVertices_, false);
+
+    q.emplace(source);
+    inQueue[source] = true;
+    distance_[source] = TCost{};
+
+    while (!q.empty()) {
+      auto fromVertex = q.front();
+      q.pop();
+      inQueue[fromVertex] = false;
+
+      for (auto edgeId : adjacentList_[fromVertex]) {
+        auto toVertex = edges_[edgeId].to;
+        if (edges_[edgeId].capacity - edges_[edgeId].flow <= TFlow{}) {
+          continue;
+        }
+        auto newDistance = distance_[fromVertex] + edges_[edgeId].cost +
+                           potential_[fromVertex] - potential_[toVertex];
+        if (newDistance < distance_[toVertex]) {
+          distance_[toVertex] = newDistance;
+          predecessor_[toVertex] = edgeId;
+          if (!inQueue[toVertex]) {
+            q.emplace(toVertex);
+            inQueue[toVertex] = true;
           }
         }
       }
-      return dist[sink] != std::numeric_limits<T>::max();
     }
+    return distance_[sink] != kInfinityCost;
+  }
 
-    auto edmondsKarp(const std::size_t source, const std::size_t sink) -> bool {
-      dist.assign(n, std::numeric_limits<T>::max());
-      pre.assign(n, -1);
+  static constexpr auto GetFindPathAlgorithm() -> decltype(auto) {
+    return kFindPathType == FindPathType::kDijkstra
+               ? &TMinCostFlow::Dijkstra
+               : &TMinCostFlow::EdmondsKarp;
+  }
+};
 
-      std::queue<std::size_t> q;
-      std::vector<bool> inQueue(n, false);
-      q.emplace(source);
-      inQueue[source] = true;
-      dist[source] = 0;
-      while (!q.empty()) {
-        const auto from = q.front();
-        q.pop();
-        inQueue[from] = false;
-        for (const auto id: g[from]) {
-          auto to = edges[id].to;
-          if (edges[id].capacity - edges[id].flow <= T{}) continue;
-          auto nd = dist[from] + edges[id].cost + pot[from] - pot[to];
-          if (nd < dist[to]) {
-            dist[to] = nd;
-            pre[to] = id;
-            if (!inQueue[to]) {
-              q.emplace(to);
-              inQueue[to] = true;
-            }
-          }
-        }
-      }
-      return dist[sink] != std::numeric_limits<T>::max();
-    }
-
-    static constexpr auto getFindPathAlgorithm() -> decltype(auto) {
-      return findPathType == FindPathType::kDijkstra ? &TMinCostFlow::dijkstra : &TMinCostFlow::edmondsKarp;
-    }
-  };
-
-} // namespace NMinCostFlow
+} // namespace NMCF

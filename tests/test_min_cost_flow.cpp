@@ -4,28 +4,32 @@
 #include <util/network_generator.hpp>
 
 class TRandomNetworkFixture : public ::testing::Test {
-protected:
-  using TUnit = int;
-  std::size_t n{}, source{}, sink{};
+  protected:
+  using TFlow = int32_t;
+  using TCost = int32_t;
+  uint32_t nVertices{}, source{}, sink{};
 
-  std::vector<NUtil::NNetwork::TEdge<TUnit>> edges;
+  std::vector<NUtil::NNetwork::TEdge<TFlow, TCost>> edges;
 
   void SetUp() override {
-    n = NUtil::NRandom::range(3, 1000);
+    nVertices = NUtil::NRandom::Range(uint32_t{3}, uint32_t{1000});
     source = 0u;
-    sink = n - 1;
-    edges = NUtil::NNetwork::generateWeightedWithCost<TUnit>(n, 60, 1000, 1000);
+    sink = nVertices - 1;
+    edges = NUtil::NNetwork::GenerateWeightedWithCost<TFlow, TCost>(
+        nVertices, 60u, TFlow{1000}, TCost{1000});
   }
 };
 
 TEST_F(TRandomNetworkFixture, MinCostFlow) {
-  NMinCostFlow::TMinCostFlow<TUnit, NMinCostFlow::FindPathType::kDijkstra> mcfDijkstra(n);
-  NMinCostFlow::TMinCostFlow<TUnit, NMinCostFlow::FindPathType::kEdmondsKarp> mcfEdmondsKarp(n);
-  for (auto &[from, to, capacity, cost]: edges) {
-    mcfDijkstra.addEdge(from, to, capacity, cost);
-    mcfEdmondsKarp.addEdge(from, to, capacity, cost);
+  NMCF::TMinCostFlow<TFlow, TCost, NMCF::FindPathType::kDijkstra> mcfDijkstra(
+      nVertices);
+  NMCF::TMinCostFlow<TFlow, TCost, NMCF::FindPathType::kEdmondsKarp>
+      mcfEdmondsKarp(nVertices);
+  for (const auto &[from, to, capacity, cost] : edges) {
+    mcfDijkstra.AddEdge(from, to, capacity, cost);
+    mcfEdmondsKarp.AddEdge(from, to, capacity, cost);
   }
-  ASSERT_EQ(mcfDijkstra.flow(source, sink), mcfEdmondsKarp.flow(source, sink));
+  ASSERT_EQ(mcfDijkstra.Flow(source, sink), mcfEdmondsKarp.Flow(source, sink));
 }
 
 int main(int argc, char *argv[]) {
