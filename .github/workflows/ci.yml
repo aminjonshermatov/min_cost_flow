@@ -1,0 +1,75 @@
+name: build and test
+
+on: [push]
+
+jobs:
+  build_Debug:
+    runs-on: ubuntu-24.04
+    env:
+      PROJECT: libmcf
+      BUILD_TYPE: Debug
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install compiler and packages
+        shell: bash
+        run: |
+          sudo apt-get install -y gcc-13 g++-13 cmake
+
+      - name: Create CMake build files
+        working-directory: ${{github.workspace}}
+        shell: bash
+        run: |
+          CXX_FLAGS=""
+          export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
+          export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
+          export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 --config Debug
+
+      - name: Compile the project
+        working-directory: ${{github.workspace}}
+        shell: bash
+        run: |
+          VERBOSE=1 cmake --build build --config $BUILD_TYPE -j8
+
+      - name: Run the tests
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: |
+          ctest
+  build_Release:
+    runs-on: ubuntu-24.04
+    env:
+      PROJECT: libmcf
+      BUILD_TYPE: Release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install compiler and packages
+        shell: bash
+        run: |
+          sudo apt-get install -y gcc-13 g++-13 cmake
+
+      - name: Create CMake build files
+        working-directory: ${{github.workspace}}
+        shell: bash
+        run: |
+          CXX_FLAGS=""
+          export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
+          export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
+          export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 --config Release
+
+      - name: Compile the project
+        working-directory: ${{github.workspace}}
+        shell: bash
+        run: |
+          VERBOSE=1 cmake --build build --config $BUILD_TYPE -j8
+
+      - name: Run the tests
+        working-directory: ${{github.workspace}}/build
+        shell: bash
+        run: |
+          ctest
