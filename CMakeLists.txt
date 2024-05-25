@@ -12,6 +12,7 @@ add_subdirectory(include)
 
 option(MCF_TESTS "Build MCF tests" OFF)
 option(MCF_BENCHMARKS "Build MCF benchmarks" OFF)
+option(MCF_EXAMPLES "Build MCF examples" OFF)
 option(MCF_DISABLE_VERIFY "Disable verify/asserts" OFF)
 
 if (MCF_TESTS)
@@ -24,4 +25,8 @@ endif ()
 if (MCF_BENCHMARKS)
     add_subdirectory(third_party/googlebenchmark)
     add_subdirectory(benchmarks)
+endif ()
+
+if (MCF_EXAMPLES)
+    add_subdirectory(examples)
 endif ()
