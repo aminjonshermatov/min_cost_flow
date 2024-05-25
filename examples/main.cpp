@@ -1,5 +1,6 @@
 #include <format>
 #include <iostream>
+#include <string_view>
 
 #include <min_cost_flow/min_cost_flow.hpp>
 
@@ -33,5 +34,6 @@ int main() {
   minCostFlowDijkstra.AddEdge(2u, kSink, 2u, 1u);
 
   const auto &&[flow, cost] = minCostFlowDijkstra.Flow(kSource, kSink);
-  std::cout << std::format("Maximum flow: {}, minium cost: {}", flow, cost);
+  using namespace std::string_view_literals;
+  std::cout << std::format("Maximum flow: {}, minium cost: {}"sv, flow, cost);
 }
