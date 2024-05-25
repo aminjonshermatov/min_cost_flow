@@ -37,7 +37,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         shell: bash
         run: |
-          ctest
+          ctest --gtest_repeat=100 --gtest_break_on_failure
   Release:
     runs-on: ubuntu-24.04
     env:
@@ -72,4 +72,4 @@ jobs:
         working-directory: ${{github.workspace}}/build
         shell: bash
         run: |
-          ctest
+          ctest --gtest_repeat=100 --gtest_break_on_failure
