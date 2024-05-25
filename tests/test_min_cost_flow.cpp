@@ -34,5 +34,8 @@ TEST_F(TRandomNetworkFixture, MinCostFlow) {
 
 int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);
+
+  GTEST_FLAG_SET(repeat, 10);
+
   return RUN_ALL_TESTS();
 }
