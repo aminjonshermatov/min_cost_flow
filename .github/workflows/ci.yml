@@ -3,7 +3,7 @@ name: build and test
 on: [push]
 
 jobs:
-  build_Debug:
+  Debug:
     runs-on: ubuntu-24.04
     env:
       PROJECT: libmcf
@@ -25,7 +25,7 @@ jobs:
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
-          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 --config Debug
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug
 
       - name: Compile the project
         working-directory: ${{github.workspace}}
@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           ctest
-  build_Release:
+  Release:
     runs-on: ubuntu-24.04
     env:
       PROJECT: libmcf
@@ -60,7 +60,7 @@ jobs:
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
-          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 --config Release
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Release
 
       - name: Compile the project
         working-directory: ${{github.workspace}}
