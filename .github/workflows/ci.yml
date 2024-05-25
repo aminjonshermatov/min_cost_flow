@@ -25,7 +25,7 @@ jobs:
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
-          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Debug -DBENCHMARK_DOWNLOAD_DEPENDENCIES
 
       - name: Compile the project
         working-directory: ${{github.workspace}}
@@ -60,7 +60,7 @@ jobs:
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} ${ENV_CMAKE_OPTIONS}"
           export CMAKE_OPTIONS="${CMAKE_OPTIONS} -DMCF_TESTS=ON"
           export CXX_FLAGS="${CXX_FLAGS} ${ENV_CXX_FLAGS}"
-          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Release
+          cmake -B build ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 -DCMAKE_BUILD_TYPE=Release -DBENCHMARK_DOWNLOAD_DEPENDENCIES
 
       - name: Compile the project
         working-directory: ${{github.workspace}}
