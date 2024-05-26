@@ -8,12 +8,16 @@ include(cmake/CompileOptions.cmake)
 
 include(GNUInstallDirs)
 
-add_subdirectory(include)
+option(MCF_TESTS "Build MCF tests" ON)
+option(MCF_BENCHMARKS "Build MCF benchmarks" ON)
+option(MCF_EXAMPLES "Build MCF examples" ON)
+option(MCF_DISABLE_VERIFY "Disable verify/asserts" ON)
 
-option(MCF_TESTS "Build MCF tests" OFF)
-option(MCF_BENCHMARKS "Build MCF benchmarks" OFF)
-option(MCF_EXAMPLES "Build MCF examples" OFF)
-option(MCF_DISABLE_VERIFY "Disable verify/asserts" OFF)
+if (MCF_DISABLE_VERIFY)
+    add_definitions(-DMCF_DISABLE_VERIFY)
+endif ()
+
+add_subdirectory(include)
 
 if (MCF_TESTS)
     add_subdirectory(third_party/googletest)
